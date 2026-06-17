@@ -1,0 +1,10 @@
+# Watchpost edge service (Raspberry Pi 5, Python 3.11). Keep in sync with pyproject.toml.
+ultralytics>=8.4.1        # YOLO26 (yolo26n) and NCNN export
+opencv-python>=4.9
+supervision>=0.20,<0.31   # sv.ByteTrack (removed in 0.31, see watchpost/tracker.py)
+supabase>=2.4
+python-dotenv>=1.0
+pyyaml>=6.0
+numpy>=1.26
+psutil>=5.9
+# CSI cameras: picamera2 comes from apt (python3-picamera2), not pip.

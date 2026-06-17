@@ -1,0 +1,5 @@
+spool/
+buffer.db*
+.venv/
+captures/
+runs/

@@ -1,0 +1,112 @@
+# Watchpost edge config. Relative paths resolve against this file's folder (edge/).
+# USB device numbers come from `v4l2-ctl --list-devices`; CSI cameras from
+# `rpicam-hello --list-cameras`. Zone polygons use normalized coordinates (0..1).
+
+node_id: pi-01                  # unique per Pi; also the first part of every person_id
+
+model:
+  path: yolo26n_ncnn_model      # made by: yolo export model=yolo26n.pt format=ncnn
+                                # fallback if YOLO26 misbehaves: yolo11n_ncnn_model
+  imgsz: 640
+  conf: 0.4
+  person_class_id: 0            # COCO person
+
+schedule:
+  stride: 5                     # YOLO on every 5th frame per camera, only with motion or open tracks
+  motion_min_area_frac: 0.004   # share of the frame that must change to count as motion
+  stagger: true                 # offset cameras so two never run YOLO in the same pass
+
+tracking:
+  exit_after_s: 3.0             # no detection for this long ends the track (exit event)
+  lost_track_buffer: 30         # ByteTrack memory, counted in YOLO ticks, not frames
+  people_refresh_s: 10.0        # refresh people.last_seen at most this often per track
+
+bestframe:
+  upload_cooldown_s: 3.0        # min seconds between best-frame uploads per track
+  min_gain: 0.15                # a new crop must score 15% higher to replace the uploaded one
+  jpeg_quality: 90
+
+snapshot:
+  interval_s: 1.0               # annotated tile per camera for the dashboard
+  width: 640
+  height: 360
+  jpeg_quality: 70
+
+health:
+  offline_after_s: 5.0          # no frames for this long marks the camera offline
+  heartbeat_s: 10.0             # cameras row refresh; status changes are pushed at once
+  blackout_luma: 12.0           # mean grey level (0-255) below this counts as covered
+  scene_change_threshold: 40.0  # mean abs diff vs the reference thumbnail (0-255)
+  tamper_hold_s: 2.0            # change must last this long, so a passer-by close to the lens is ignored
+  rebaseline_s: 30.0            # a moved camera with a steady new view goes back online after this
+
+telemetry:
+  interval_s: 5                 # one telemetry row per interval
+  prune_every_s: 3600           # call prune_telemetry this often
+  keep_hours: 24
+
+publisher:
+  buffer_path: buffer.db        # SQLite rows waiting for the network
+  spool_dir: spool              # best-frame JPEGs waiting for the network
+  queue_size: 1000
+  max_attempts: 5               # a row Supabase keeps rejecting (4xx) is dropped after this many tries
+  max_buffer_rows: 50000
+
+cameras:
+  - id: cam-01
+    name: MX Brio 4K
+    role: identity
+    backend: v4l2               # v4l2 (USB) or picamera2 (CSI ribbon on the Pi 5)
+    device: 0                   # /dev/video0; a /dev/v4l/by-id/... path survives reboots
+    width: 1280
+    height: 720
+    fps: 15
+    detect: false               # no YOLO on this camera; health and snapshots still run
+    zones: []
+    loiter_seconds: 15
+
+  - id: cam-02
+    name: AR0234 Global Shutter
+    role: detect
+    backend: v4l2
+    device: 2
+    width: 1280
+    height: 720
+    fps: 15
+    detect: true
+    zones:
+      - name: restricted-east   # right third of the frame
+        restricted: true
+        polygon: [[0.66, 0.10], [0.98, 0.10], [0.98, 0.95], [0.66, 0.95]]
+    loiter_seconds: 10
+
+  - id: cam-03
+    name: IMX678 Low-Light
+    role: perimeter
+    backend: v4l2
+    device: 4
+    width: 1280
+    height: 720
+    fps: 15
+    detect: true
+    zones: []
+    loiter_seconds: 12
+
+  # CSI ribbon camera example. device is the libcamera index (0 = first CSI port).
+  # Needs `sudo apt install python3-picamera2` and a venv made with --system-site-packages.
+  # - id: cam-04
+  #   name: Pi Camera Module 3
+  #   role: detect
+  #   backend: picamera2
+  #   device: 0
+  #   width: 1280
+  #   height: 720
+  #   fps: 15
+  #   detect: true
+  #   stride: 6                 # optional per-camera override of schedule.stride
+  #   zones: []
+  #   loiter_seconds: 10
+  #
+  # Older form, still accepted: a list of bare polygons, each becomes a restricted zone.
+  #   restricted_zones:
+  #     - [[0.66, 0.10], [0.98, 0.10], [0.98, 0.95], [0.66, 0.95]]
