@@ -1,0 +1,37 @@
+# Secrets. Never commit real keys.
+.env
+.env.*
+!.env.example
+**/.env
+**/.env.local
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+edge/buffer.db
+edge/*.db
+
+# Models (large; export on the Pi)
+*_ncnn_model/
+*.pt
+*.onnx
+
+# Node
+node_modules/
+dist/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+
+# Local assistant notes (not published)
+CLAUDE.md
+.claude/
