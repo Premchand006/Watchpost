@@ -1,0 +1,24 @@
+# Installed by deploy/install.sh, which fills in @USER@ and @EDGE_DIR@.
+#   sudo systemctl status watchpost
+#   journalctl -u watchpost -f
+[Unit]
+Description=Watchpost edge vision service
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=simple
+User=@USER@
+SupplementaryGroups=video render
+WorkingDirectory=@EDGE_DIR@
+ExecStart=@EDGE_DIR@/.venv/bin/python -m watchpost --config @EDGE_DIR@/config.yaml
+Environment=PYTHONUNBUFFERED=1
+# SIGTERM lets the engine emit exits, mark cameras offline and flush the publisher.
+KillSignal=SIGTERM
+TimeoutStopSec=20
+Restart=on-failure
+RestartSec=5
+Nice=-5
+
+[Install]
+WantedBy=multi-user.target
