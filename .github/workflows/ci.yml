@@ -1,0 +1,48 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  edge:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: edge
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+          cache-dependency-path: edge/requirements.txt
+      # opencv-python (also pulled in by supervision) needs libGL to import.
+      - run: sudo apt-get update && sudo apt-get install -y libgl1
+      # The test suite needs no camera, model or network, so skip ultralytics and supabase.
+      - run: >-
+          pip install numpy opencv-python pyyaml python-dotenv
+          "supervision>=0.20,<0.31" psutil pytest ruff
+      - run: ruff check .
+      - run: python -m pytest -q
+
+  dashboard:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: dashboard
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: dashboard/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm test -- --run
+      - run: npm run build
