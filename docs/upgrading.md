@@ -1,7 +1,7 @@
 # Upgrading a v1 deployment
 
-This is for a Supabase project, dashboard and Pi that are running the v1 code (the project was
-called SentinelEdge then, and the Pi ran `edge/vision_engine.py`). A new install does not need
+This is for a Supabase project, dashboard and Pi that are running the v1 code (the Pi ran
+`edge/vision_engine.py`). A new install does not need
 any of this; run `cloud/schema.sql` instead.
 
 `cloud/migrations/002_watchpost.sql` changes the database contract, and both the old dashboard and
@@ -65,7 +65,7 @@ So stop the old process (however it was started: a terminal, `nohup`, or your ow
 and install the new one:
 
 ```bash
-cd ~/watchpost            # older setups used ~/sentineledge
+cd ~/watchpost            # or wherever your v1 checkout lives
 git pull
 mv edge/buffer.db edge/buffer.v1.db 2>/dev/null || true   # old buffer holds rows the new schema rejects
 bash edge/deploy/install.sh

@@ -5,8 +5,7 @@ best-frame photos to Supabase for a web dashboard you can open from anywhere.
 
 ![Watchpost dashboard, Command page](docs/images/dashboard-command.png)
 
-*The Command page of a live deployment with two USB cameras. The screenshot was taken before the
-project was renamed, so the header still reads SENTINEL/EDGE.*
+*The Command page of a live deployment with two USB cameras.*
 
 ## How it works
 
